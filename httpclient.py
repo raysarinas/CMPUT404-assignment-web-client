@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 # Copyright 2016 Abram Hindle, https://github.com/tywtyw2002, and https://github.com/treedust
+# Copyright 2021 Raymond Sarinas
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,13 +42,13 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
-        return None
+        return int(data.split("\r\n")[0].split(" ")[1])
 
     def get_headers(self,data):
-        return None
+        return data.split("\r\n\r\n")[0]
 
-    def get_body(self, data):
-        return None
+    def get_body(self, data): # everything after headers
+        return data.split("\r\n\r\n")[1] # should this be [-1]?
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -68,8 +69,42 @@ class HTTPClient(object):
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
+        # parse stuff and connect to socket
+        parsed_url = urllib.parse.urlparse(url)
+
+        hostname = parsed_url.hostname
+        path = parsed_url.path if parsed_url.path else "/"
+        port = int(parsed_url.port) if parsed_url.port else 80
+
+        self.connect(hostname, port)
+
+        # request to socket
+        request = f"GET {path} HTTP/1.1\r\n"
+        request += f"Host: {hostname}\r\n"
+        request += "Accept: */*\r\n"
+        request += "Connection: close\r\n\r\n"
+
+        print(request)
+
         code = 500
         body = ""
+
+        try:
+            # send request and get response
+            self.sendall(request)
+            response = self.recvall(self.socket)
+            print("Response:", response)
+
+            # parse the response
+            code = self.get_code(response)
+            body = self.get_body(response)
+        except:
+            print("ERRRRRRRRRRORRRRRR")
+            
+        finally:
+            # finally close the socket
+            self.close()
+        
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
