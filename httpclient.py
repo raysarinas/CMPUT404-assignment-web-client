@@ -107,9 +107,49 @@ class HTTPClient(object):
         
         return HTTPResponse(code, body)
 
-    def POST(self, url, args=None):
+    def POST(self, url, args=None):        
+        # parse stuff and connect to socket
+        parsed_url = urllib.parse.urlparse(url)
+
+        hostname = parsed_url.hostname
+        path = parsed_url.path if parsed_url.path else "/"
+        port = int(parsed_url.port) if parsed_url.port else 80
+
+        self.connect(hostname, port)
+
+        # encode content to send i guess
+        content = urllib.parse.urlencode(args) if args else ""
+        content_length = len(content) if content else 0
+
+        # request to socket
+        request = f"POST {path} HTTP/1.1\r\n"
+        request += f"Host: {hostname}\r\n"
+        request += "Accept: */*\r\n"
+        request += "Content-Type: application/x-www-form-urlencoded\r\n"
+        request += f"Content-Length: {content_length}\r\n"
+        request += "Connection: close\r\n\r\n"
+        request += content if content else ""
+
         code = 500
         body = ""
+
+        try:
+            # send request and get response
+            self.sendall(request)
+            response = self.recvall(self.socket)
+            print("Content:", content)
+            print("Response:", response)
+
+            # parse the response
+            code = self.get_code(response)
+            body = self.get_body(response)
+        except:
+            print("ERRRRRRRRRRORRRRRR")
+            
+        finally:
+            # finally close the socket
+            self.close()
+
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
