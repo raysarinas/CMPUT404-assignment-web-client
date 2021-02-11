@@ -34,7 +34,13 @@ class HTTPResponse(object):
         self.body = body
 
 class HTTPClient(object):
-    #def get_host_port(self,url):
+    def get_host_port(self,url):
+        parsed_url = urllib.parse.urlparse(url)
+
+        host = parsed_url.hostname
+        path = parsed_url.path if parsed_url.path else "/"
+        port = int(parsed_url.port) if parsed_url.port else 80
+        return host, path, port
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -70,11 +76,7 @@ class HTTPClient(object):
 
     def GET(self, url, args=None):
         # parse stuff and connect to socket
-        parsed_url = urllib.parse.urlparse(url)
-
-        hostname = parsed_url.hostname
-        path = parsed_url.path if parsed_url.path else "/"
-        port = int(parsed_url.port) if parsed_url.port else 80
+        hostname, path, port = self.get_host_port(url)
 
         self.connect(hostname, port)
 
@@ -84,8 +86,6 @@ class HTTPClient(object):
         request += "Accept: */*\r\n"
         request += "Connection: close\r\n\r\n"
 
-        print(request)
-
         code = 500
         body = ""
 
@@ -93,7 +93,7 @@ class HTTPClient(object):
             # send request and get response
             self.sendall(request)
             response = self.recvall(self.socket)
-            print("Response:", response)
+            print(response)
 
             # parse the response
             code = self.get_code(response)
@@ -109,15 +109,11 @@ class HTTPClient(object):
 
     def POST(self, url, args=None):        
         # parse stuff and connect to socket
-        parsed_url = urllib.parse.urlparse(url)
-
-        hostname = parsed_url.hostname
-        path = parsed_url.path if parsed_url.path else "/"
-        port = int(parsed_url.port) if parsed_url.port else 80
+        hostname, path, port = self.get_host_port(url)
 
         self.connect(hostname, port)
 
-        # encode content to send i guess
+        # encode content to send
         content = urllib.parse.urlencode(args) if args else ""
         content_length = len(content) if content else 0
 
@@ -137,8 +133,7 @@ class HTTPClient(object):
             # send request and get response
             self.sendall(request)
             response = self.recvall(self.socket)
-            print("Content:", content)
-            print("Response:", response)
+            print(response)
 
             # parse the response
             code = self.get_code(response)
