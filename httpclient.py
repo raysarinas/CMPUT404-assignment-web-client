@@ -35,6 +35,9 @@ class HTTPResponse(object):
 
 class HTTPClient(object):
     def get_host_port(self,url):
+        # how to use and what to get from urllib.parse.urlparse()
+        # https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlparse
+        # https://pymotw.com/3/urllib.parse/
         parsed_url = urllib.parse.urlparse(url)
 
         host = parsed_url.hostname
@@ -92,7 +95,8 @@ class HTTPClient(object):
             response = self.recvall(self.socket)
             print(response)
 
-            # parse the response
+            # parse the response - how to get code and body
+            # https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages
             code = self.get_code(response)
             body = self.get_body(response)
         except:
@@ -116,6 +120,8 @@ class HTTPClient(object):
         content_length = len(content) if content else 0
 
         # request to socket
+        # info on content-type
+        # https://dev.to/sidthesloth92/understanding-html-form-encoding-url-encoded-and-multipart-forms-3lpa
         request = f"POST {path} HTTP/1.1\r\n"
         request += f"Host: {hostname}\r\n"
         request += "Accept: */*\r\n"
