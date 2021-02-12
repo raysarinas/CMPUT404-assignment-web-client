@@ -86,9 +86,6 @@ class HTTPClient(object):
         request += "Accept: */*\r\n"
         request += "Connection: close\r\n\r\n"
 
-        code = 500
-        body = ""
-
         try:
             # send request and get response
             self.sendall(request)
@@ -99,7 +96,8 @@ class HTTPClient(object):
             code = self.get_code(response)
             body = self.get_body(response)
         except:
-            print("ERRRRRRRRRRORRRRRR")
+            code = 500 # internal server error
+            body = ""
             
         finally:
             # finally close the socket
@@ -126,9 +124,6 @@ class HTTPClient(object):
         request += "Connection: close\r\n\r\n"
         request += content if content else ""
 
-        code = 500
-        body = ""
-
         try:
             # send request and get response
             self.sendall(request)
@@ -139,7 +134,8 @@ class HTTPClient(object):
             code = self.get_code(response)
             body = self.get_body(response)
         except:
-            print("ERRRRRRRRRRORRRRRR")
+            code = 500 # internal server error
+            body = ""
             
         finally:
             # finally close the socket
